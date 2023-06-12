@@ -4,6 +4,12 @@ const bcrypt = require("bcrypt");
 const { User, User_rating } = require("../models/models");
 const jwt = require("jsonwebtoken");
 
+const generateJvt = (id, name, role) => {
+  return jwt.sign({ id, name, otdel }, process.env.SECRET_KEY, {
+    expiresIn: "24h",
+  }); //получаем jvt токен
+};
+
 class UserController {
   async registration(req, res, next) {
     const { name, password, otdel } = req.body;
@@ -19,13 +25,7 @@ class UserController {
     const hashPassword = await bcrypt.hash(password, 5); // хешируем пароль
     const user = await User.create({ name, otdel, password: hashPassword });
     const user_rating = await User_rating.create({ userId: user.id });
-    const token = jwt.sign(
-      { id: user.id, name, otdel },
-      process.env.SECRET_KEY,
-      {
-        expiresIn: "24h",
-      }
-    ); //получаем jvt токен
+    const token = generateJvt(user.id, user.name, user.role);
     return res.json({ token });
   }
   async login(req, res) {}
